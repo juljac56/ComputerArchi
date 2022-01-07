@@ -2,7 +2,7 @@ Répertoire qui contient le démarrage du TP sur la réalisation du processeur r
 
 Récupérer le projet
 ---------------------
-Faire un clone pour récupérer le projet.
+Faire un clone pour récupérer le projet. Julien
 
 `git clone git@gitlab-student.centralesupelec.fr:comparch/processeur.git`
 
