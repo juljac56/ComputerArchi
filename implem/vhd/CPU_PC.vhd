@@ -27,7 +27,8 @@ architecture RTL of CPU_PC is
         S_Init,
         S_Pre_Fetch,
         S_Fetch,
-        S_Decode
+        S_Decode,
+	S_LUI
     );
 
     signal state_d, state_q : State_type;
@@ -96,46 +97,46 @@ begin
     begin
 
         -- Valeurs par défaut de cmd à définir selon les préférences de chacun
-        cmd.rst               <= 'U';
-        cmd.ALU_op            <= UNDEFINED;
-        cmd.LOGICAL_op        <= UNDEFINED;
-        cmd.ALU_Y_sel         <= UNDEFINED;
+        cmd.rst               <= ’0’;
+        cmd.ALU_op            <= ’0’;
+        cmd.LOGICAL_op        <= ’0’;
+        cmd.ALU_Y_sel         <= ’0’;
 
-        cmd.SHIFTER_op        <= UNDEFINED;
-        cmd.SHIFTER_Y_sel     <= UNDEFINED;
+        cmd.SHIFTER_op        <= ’0’;
+        cmd.SHIFTER_Y_sel     <= ’0’;
 
-        cmd.RF_we             <= 'U';
-        cmd.RF_SIZE_sel       <= UNDEFINED;
-        cmd.RF_SIGN_enable    <= 'U';
-        cmd.DATA_sel          <= UNDEFINED;
+        cmd.RF_we             <= ’0’;
+        cmd.RF_SIZE_sel       <= ’0’;
+        cmd.RF_SIGN_enable    <= ’0’;
+        cmd.DATA_sel          <= ’0’;
 
-        cmd.PC_we             <= 'U';
-        cmd.PC_sel            <= UNDEFINED;
+        cmd.PC_we             <= ’0’;
+        cmd.PC_sel            <= ’0’;
 
-        cmd.PC_X_sel          <= UNDEFINED;
-        cmd.PC_Y_sel          <= UNDEFINED;
+        cmd.PC_X_sel          <= ’0’;
+        cmd.PC_Y_sel          <= ’0’;
 
-        cmd.TO_PC_Y_sel       <= UNDEFINED;
+        cmd.TO_PC_Y_sel       <= ’0’;
 
-        cmd.AD_we             <= 'U';
-        cmd.AD_Y_sel          <= UNDEFINED;
+        cmd.AD_we             <= ’0’;
+        cmd.AD_Y_sel          <= ’0’;
 
-        cmd.IR_we             <= 'U';
+        cmd.IR_we             <= ’0’;
 
-        cmd.ADDR_sel          <= UNDEFINED;
-        cmd.mem_we            <= 'U';
-        cmd.mem_ce            <= 'U';
+        cmd.ADDR_sel          <= ’0’;
+        cmd.mem_we            <= ’0’;
+        cmd.mem_ce            <= ’0’;
 
-        cmd_cs.CSR_we            <= UNDEFINED;
+        cmd_cs.CSR_we            <= ’0’;
 
-        cmd_cs.TO_CSR_sel        <= UNDEFINED;
-        cmd_cs.CSR_sel           <= UNDEFINED;
-        cmd_cs.MEPC_sel          <= UNDEFINED;
+        cmd_cs.TO_CSR_sel        <= ’0’;
+        cmd_cs.CSR_sel           <= ’0’;
+        cmd_cs.MEPC_sel          <= ’0’;
 
-        cmd_cs.MSTATUS_mie_set   <= 'U';
-        cmd_cs.MSTATUS_mie_reset <= 'U';
+        cmd_cs.MSTATUS_mie_set   <= ’0’;
+        cmd_cs.MSTATUS_mie_reset <= ’0’;
 
-        cmd_cs.CSR_WRITE_mode    <= UNDEFINED;
+        cmd_cs.CSR_WRITE_mode    <= ’0’;
 
         state_d <= state_q;
 
@@ -166,6 +167,28 @@ begin
                 cmd.PC_we <= '1';
 
                 state_d <= S_Init;
+		if status.IR(6 downto 0) = "0110111" then
+			cmd.TO_PC_Y_sel <= TO_PC_Y_cst_x04;
+			cmd.PC_sel <= PC_from_pc;
+			cmd.PC_we <= ’1’; 
+			state_d <= S_LUI;
+			elsestate_d <= S_Error;
+			 -- Pour d ́etecter les rates du d ́ecodage
+		end if;
+	   
+	   when S_LUI =>
+		-- rd <- ImmU + 0
+		cmd.PC_X_sel <= PC_X_cst_x00;
+		cmd.PC_Y_sel <= PC_Y_immU;
+		cmd.RF_we <= ’1’;
+		cmd.DATA_sel <= DATA_from_pc;
+		-- lecture mem[PC]
+		cmd.ADDR_sel <= ADDR_from_pc;
+		cmd.mem_ce <= ’1’;
+		cmd.mem_we <= ’0’;
+		-- next state
+		state_d <= S_Fetch;
+	    
 
                 -- Décodage effectif des instructions,
                 -- à compléter par vos soins
