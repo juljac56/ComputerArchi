@@ -97,46 +97,46 @@ begin
     begin
 
         -- Valeurs par défaut de cmd à définir selon les préférences de chacun
-        cmd.rst               <= ’0’;
-        cmd.ALU_op            <= ’0’;
-        cmd.LOGICAL_op        <= ’0’;
-        cmd.ALU_Y_sel         <= ’0’;
+        cmd.rst               <= '0';
+        cmd.ALU_op            <= ALU_plus;
+        cmd.LOGICAL_op        <= LOGICAL_XOR;
+        cmd.ALU_Y_sel         <= ALU_Y_immI;
 
-        cmd.SHIFTER_op        <= ’0’;
-        cmd.SHIFTER_Y_sel     <= ’0’;
+        cmd.SHIFTER_op        <= SHIFT_rl;
+        cmd.SHIFTER_Y_sel     <= SHIFTER_Y_rs2;
 
-        cmd.RF_we             <= ’0’;
-        cmd.RF_SIZE_sel       <= ’0’;
-        cmd.RF_SIGN_enable    <= ’0’;
-        cmd.DATA_sel          <= ’0’;
+        cmd.RF_we             <= '0';
+        cmd.RF_SIZE_sel       <= RF_SIZE_word;
+        cmd.RF_SIGN_enable    <= '0';
+        cmd.DATA_sel          <= DATA_from_alu;
 
-        cmd.PC_we             <= ’0’;
-        cmd.PC_sel            <= ’0’;
+        cmd.PC_we             <= '0';
+        cmd.PC_sel            <= PC_from_alu;
 
-        cmd.PC_X_sel          <= ’0’;
-        cmd.PC_Y_sel          <= ’0’;
+        cmd.PC_X_sel          <= PC_X_pc;
+        cmd.PC_Y_sel          <= PC_Y_cst_x04;
 
-        cmd.TO_PC_Y_sel       <= ’0’;
+        cmd.TO_PC_Y_sel       <= TO_PC_Y_immJ;
 
-        cmd.AD_we             <= ’0’;
-        cmd.AD_Y_sel          <= ’0’;
+        cmd.AD_we             <= '0';
+        cmd.AD_Y_sel          <= AD_Y_immI;
 
-        cmd.IR_we             <= ’0’;
+        cmd.IR_we             <= '0';
 
-        cmd.ADDR_sel          <= ’0’;
-        cmd.mem_we            <= ’0’;
-        cmd.mem_ce            <= ’0’;
+        cmd.ADDR_sel          <= ADDR_from_pc;
+        cmd.mem_we            <= '0';
+        cmd.mem_ce            <= '0';
 
-        cmd_cs.CSR_we            <= ’0’;
+        cmd_cs.CSR_we            <= UNDEFINED;
 
-        cmd_cs.TO_CSR_sel        <= ’0’;
-        cmd_cs.CSR_sel           <= ’0’;
-        cmd_cs.MEPC_sel          <= ’0’;
+        cmd_cs.TO_CSR_sel        <= UNDEFINED;
+        cmd_cs.CSR_sel           <= UNDEFINED;
+        cmd_cs.MEPC_sel          <= UNDEFINED;
 
-        cmd_cs.MSTATUS_mie_set   <= ’0’;
-        cmd_cs.MSTATUS_mie_reset <= ’0’;
+        cmd_cs.MSTATUS_mie_set   <= 'U';
+        cmd_cs.MSTATUS_mie_reset <= 'U';
 
-        cmd_cs.CSR_WRITE_mode    <= ’0’;
+        cmd_cs.CSR_WRITE_mode    <= UNDEFINED;
 
         state_d <= state_q;
 
@@ -170,9 +170,10 @@ begin
 		if status.IR(6 downto 0) = "0110111" then
 			cmd.TO_PC_Y_sel <= TO_PC_Y_cst_x04;
 			cmd.PC_sel <= PC_from_pc;
-			cmd.PC_we <= ’1’; 
+			cmd.PC_we <= '1'; 
 			state_d <= S_LUI;
-			elsestate_d <= S_Error;
+			else
+                        state_d <= S_Error;
 			 -- Pour d ́etecter les rates du d ́ecodage
 		end if;
 	   
@@ -180,12 +181,12 @@ begin
 		-- rd <- ImmU + 0
 		cmd.PC_X_sel <= PC_X_cst_x00;
 		cmd.PC_Y_sel <= PC_Y_immU;
-		cmd.RF_we <= ’1’;
+		cmd.RF_we <= '1';
 		cmd.DATA_sel <= DATA_from_pc;
 		-- lecture mem[PC]
 		cmd.ADDR_sel <= ADDR_from_pc;
-		cmd.mem_ce <= ’1’;
-		cmd.mem_we <= ’0’;
+		cmd.mem_ce <= '1';
+		cmd.mem_we <= '0';
 		-- next state
 		state_d <= S_Fetch;
 	    
