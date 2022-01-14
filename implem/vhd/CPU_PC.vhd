@@ -191,11 +191,15 @@ begin
 		-- next state
 		state_d <= S_Fetch;
 
-	when S_ADDI => 
-		cmd.PC_X_sel <= PC_X_cst_x00;
-		cmd.PC_Y_sel <= PC_Y_immB;
-		cmd.ALU_op            <= ALU_plus;
-	
+	  when S_ADDI =>
+		cmd.AD_Y_sel <= AD_Y_immI;
+		cmd.AD_we <= '1';
+		cmd.ADDR_sel <= ADDR_from_pc;
+		cmd.mem_ce <= '1';
+		cmd.mem_we <= '0';
+
+                state_d <= S_Fetch;
+		
 	    
 
                 -- Décodage effectif des instructions,

@@ -53,3 +53,5 @@ Space Invader sur carte :
 
 `cd implem && make help`
 
+source /Xilinx/env-14.7.sh
+
