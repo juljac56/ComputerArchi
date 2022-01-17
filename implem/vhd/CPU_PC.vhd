@@ -173,7 +173,9 @@ begin
 			cmd.PC_sel <= PC_from_pc;
 			cmd.PC_we <= '1'; 
 			state_d <= S_LUI;
-			else
+		elsif status.IR(6 downto 0) = "0010011" then
+			state_d <= S_ADDI;
+		else
                         state_d <= S_Error;
 			 -- Pour d ́etecter les rates du d ́ecodage
 		end if;
@@ -191,14 +193,17 @@ begin
 		-- next state
 		state_d <= S_Fetch;
 
-	  when S_ADDI =>
-		cmd.AD_Y_sel <= AD_Y_immI;
-		cmd.AD_we <= '1';
+	   when S_ADDI =>
+		cmd.ALU_Y_sel <= ALU_Y_immI;
+		cmd.ALU_op <= ALU_plus;
+		cmd.DATA_sel <= DATA_from_alu;
+		cmd.RF_we <= '1';
 		cmd.ADDR_sel <= ADDR_from_pc;
 		cmd.mem_ce <= '1';
 		cmd.mem_we <= '0';
-
-                state_d <= S_Fetch;
+		-- next state
+		state_d <= S_Fetch;
+				
 		
 	    
 
