@@ -182,8 +182,13 @@ begin
 			if status.IR(31 downto 25) = "0100000" then 
 				state_d <= S_SUB;
 			elsif status.IR(31 downto 25) = "0000000" then
-				state_d <= S_ADD;
+				if status.IR(14 downto 12) = "001" then
+					state_d <= S_SLL;
+				elsif status.IR(14 downto 12) = "000" then
+					state_d <= S_ADD;
+				end if;
 			end if;
+
 		else
                         state_d <= S_Error;
 			 -- Pour d ́etecter les rates du d ́ecodage
@@ -234,6 +239,19 @@ begin
 		cmd.mem_we <= '0';
 		-- next state
 		state_d <= S_Fetch;
+		
+		
+	  when S_SLL => 
+		cmd.SHIFTER_Y_SEL <= SHIFTER_Y_rs2;
+		cmd.SHIFTER_op <= SHIFT_ll;
+		cmd.DATA_sel <= DATA_from_shifter;
+		cmd.RF_we <= '1';
+		cmd.ADDR_sel <= ADDR_from_pc;
+		cmd.mem_ce <= '1';
+		cmd.mem_we <= '0';
+		-- next state
+		state_d <= S_Fetch;
+
 				
 				
 		
