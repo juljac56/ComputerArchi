@@ -29,7 +29,10 @@ architecture RTL of CPU_PC is
         S_Fetch,
         S_Decode,
 	S_LUI,
-	S_ADDI
+	S_ADDI,
+	S_ADD, 
+	S_SUB,
+	S_SLL
     );
 
     signal state_d, state_q : State_type;
@@ -175,6 +178,12 @@ begin
 			state_d <= S_LUI;
 		elsif status.IR(6 downto 0) = "0010011" then
 			state_d <= S_ADDI;
+		elsif status.IR(6 downto 0) = "0110011" then
+			if status.IR(31 downto 25) = "0100000" then 
+				state_d <= S_SUB;
+			elsif status.IR(31 downto 25) = "0000000" then
+				state_d <= S_ADD;
+			end if;
 		else
                         state_d <= S_Error;
 			 -- Pour d ́etecter les rates du d ́ecodage
@@ -203,6 +212,29 @@ begin
 		cmd.mem_we <= '0';
 		-- next state
 		state_d <= S_Fetch;
+
+	   when S_ADD =>
+		cmd.ALU_Y_sel <= ALU_Y_rf_rs2;
+		cmd.ALU_op <= ALU_plus;
+		cmd.DATA_sel <= DATA_from_alu;
+		cmd.RF_we <= '1';
+		cmd.ADDR_sel <= ADDR_from_pc;
+		cmd.mem_ce <= '1';
+		cmd.mem_we <= '0';
+		-- next state
+		state_d <= S_Fetch;
+
+           when S_SUB =>
+		cmd.ALU_Y_sel <= ALU_Y_rf_rs2;
+		cmd.ALU_op <= ALU_minus;
+		cmd.DATA_sel <= DATA_from_alu;
+		cmd.RF_we <= '1';
+		cmd.ADDR_sel <= ADDR_from_pc;
+		cmd.mem_ce <= '1';
+		cmd.mem_we <= '0';
+		-- next state
+		state_d <= S_Fetch;
+				
 				
 		
 	    
