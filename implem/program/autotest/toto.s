@@ -1,20 +1,17 @@
 # TAG = toto
 	.text
 
-	beq x0,x0,0
-	bge x0,x0,0
-	bgeu x0,x0,0
-	blt x0,x0,0
-	bltu x0,x0,0
-	bne x0,x0,0
+        beq x0, x0, juju
+	
+juju:
+	bne x0, x0, juju
+	blt x0, x0, juju
+	bltu x0, x0, juju
 
-	# max_cycle 20000
+		
+
+	# max_cycle 200
 	# pout_start
 	# 00000000
-	# 00000000
-	# 00000000
-	# 00000000
-	# 00000000
-	# 00000000
-
+	# 00000005
 	# pout_end

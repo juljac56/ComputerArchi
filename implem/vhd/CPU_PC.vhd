@@ -45,7 +45,8 @@ architecture RTL of CPU_PC is
 	S_BNE,
 	S_BLT,
 	S_BGE,
-	S_TOTO
+	S_TOTO,
+	S_SLT
     );
 
     signal state_d, state_q : State_type;
@@ -189,6 +190,7 @@ begin
 			cmd.PC_sel <= PC_from_pc;
 			cmd.PC_we <= '1'; 
 			state_d <= S_LUI;
+
 		elsif status.IR(6 downto 0) = "0010011" then
 			state_d <= S_ADDI;
 			if status.IR(14 downto 12) = "111" then
@@ -203,6 +205,7 @@ begin
 			
 		elsif status.IR(6 downto 0) = "0010111" then
 			state_d <= S_AUIPC;
+
 		elsif status.IR(6 downto 0) = "1100011" then
 			state_d <= S_TOTO;
 
@@ -222,6 +225,8 @@ begin
 					state_d <= S_XOR;
 				elsif status.IR(14 downto 12) = "101" then
 					state_d <= S_SRL;
+				elsif status.IR(14 downto 12) = "010" then
+			           state_d <= S_SLT;
 				end if;
 			end if;
 
@@ -380,8 +385,23 @@ begin
 		state_d <= S_Fetch;
 
 	when S_TOTO =>
+		cmd.ADDR_sel <= ADDR_from_pc;
+		cmd.mem_ce <= '1';
+		cmd.mem_we <= '0';
+		-- next state
 		state_d <= S_Fetch;
-		
+	
+	when S_SLT =>
+		cmd.ALU_Y_sel <= ALU_Y_rf_rs2;
+		cmd.ADDR_sel <= ADDR_from_pc;
+		cmd.DATA_sel <= DATA_from_slt;
+                cmd.RF_we <= '1';
+		cmd.mem_ce <= '1';
+		cmd.mem_we <= '0';
+		-- next state
+		state_d <= S_Fetch;
+
+
 				
 				
 		
