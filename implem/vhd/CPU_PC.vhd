@@ -52,7 +52,14 @@ architecture RTL of CPU_PC is
 	S_BLT,
 	S_BGE,
 	S_BLTU,
-	S_BGEU
+	S_BGEU,
+	S_ORI,
+	S_XORI,
+	S_SRA,
+	S_SRAI,
+	S_LW,
+	S_LW2,
+	S_LW3
     );
 
     signal state_d, state_q : State_type;
@@ -198,7 +205,7 @@ begin
 			state_d <= S_LUI;
 
 		elsif status.IR(6 downto 0) = "0010011" then
-			state_d <= S_ADDI;
+
 			if status.IR(14 downto 12) = "111" then
 					state_d <= S_ANDI;
 			elsif status.IR(14 downto 12) = "000" then
@@ -206,11 +213,22 @@ begin
 			elsif status.IR(14 downto 12) = "001" then
 					state_d <= S_SLLI;
 			elsif status.IR(14 downto 12) = "101" then
+				
+				if status.IR(31 downto 25) = "0100000" then
+					state_d <= S_SRAI;
+				elsif status.IR(31 downto 25) = "0000000" then
 					state_d <= S_SRLI;
+				end if;
+
 			elsif status.IR(14 downto 12) = "010" then
 			           state_d <= S_SLTI;
+			elsif status.IR(14 downto 12) = "110" then
+			           state_d <= S_ORI;
+			elsif status.IR(14 downto 12) = "100" then
+			           state_d <= S_XORI;
 			elsif status.IR(14 downto 12) = "011" then
 			           state_d <= S_SLTIU;
+			
 			end if;
 			
 		elsif status.IR(6 downto 0) = "0010111" then
@@ -240,7 +258,12 @@ begin
 
 		elsif status.IR(6 downto 0) = "0110011" then
 			if status.IR(31 downto 25) = "0100000" then 
-				state_d <= S_SUB;
+				if status.IR(14 downto 12) = "000" then
+					state_d <= S_SUB;
+				elsif status.IR(14 downto 12) = "101" then
+					state_d <= S_SRA;
+				end if;
+			
 			elsif status.IR(31 downto 25) = "0000000" then
 				if status.IR(14 downto 12) = "001" then
 					state_d <= S_SLL;
@@ -260,6 +283,11 @@ begin
 			           state_d <= S_SLTU;
 				end if;
 			end if;
+
+		elsif status.IR(6 downto 0) = "0000011" then
+			elsif status.IR(14 downto 12) = "010" then
+					state_d <= S_LW;
+			
 
 		else
                         state_d <= S_Error;
@@ -333,10 +361,32 @@ begin
 		cmd.mem_we <= '0';
 		-- next state
 		state_d <= S_Fetch;
+	
+	when S_ORI =>
+		cmd.ALU_Y_sel <= ALU_Y_immI;
+		cmd.LOGICAL_OP <= LOGICAL_or;
+		cmd.DATA_sel <= DATA_from_logical;
+		cmd.RF_we <= '1';
+		cmd.ADDR_sel <= ADDR_from_pc;
+		cmd.mem_ce <= '1';
+		cmd.mem_we <= '0';
+		-- next state
+		state_d <= S_Fetch;
 
 	
 	when S_XOR =>
 		cmd.ALU_Y_sel <= ALU_Y_rf_rs2;
+		cmd.LOGICAL_OP <= LOGICAL_xor;
+		cmd.DATA_sel <= DATA_from_logical;
+		cmd.RF_we <= '1';
+		cmd.ADDR_sel <= ADDR_from_pc;
+		cmd.mem_ce <= '1';
+		cmd.mem_we <= '0';
+		-- next state
+		state_d <= S_Fetch;
+
+	when S_XORI =>
+		cmd.ALU_Y_sel <= ALU_Y_immI;
 		cmd.LOGICAL_OP <= LOGICAL_xor;
 		cmd.DATA_sel <= DATA_from_logical;
 		cmd.RF_we <= '1';
@@ -361,6 +411,28 @@ begin
 	  when S_SLL => 
 		cmd.SHIFTER_Y_SEL <= SHIFTER_Y_rs2;
 		cmd.SHIFTER_op <= SHIFT_ll;
+		cmd.DATA_sel <= DATA_from_shifter;
+		cmd.RF_we <= '1';
+		cmd.ADDR_sel <= ADDR_from_pc;
+		cmd.mem_ce <= '1';
+		cmd.mem_we <= '0';
+		-- next state
+		state_d <= S_Fetch;
+	
+	when S_SRA => 
+		cmd.SHIFTER_Y_SEL <= SHIFTER_Y_rs2;
+		cmd.SHIFTER_op <= SHIFT_ra;
+		cmd.DATA_sel <= DATA_from_shifter;
+		cmd.RF_we <= '1';
+		cmd.ADDR_sel <= ADDR_from_pc;
+		cmd.mem_ce <= '1';
+		cmd.mem_we <= '0';
+		-- next state
+		state_d <= S_Fetch;
+
+	when S_SRAI => 
+		cmd.SHIFTER_Y_SEL <= SHIFTER_Y_ir_sh;
+		cmd.SHIFTER_op <= SHIFT_ra;
 		cmd.DATA_sel <= DATA_from_shifter;
 		cmd.RF_we <= '1';
 		cmd.ADDR_sel <= ADDR_from_pc;
@@ -464,6 +536,39 @@ begin
 		state_d <= S_Fetch;
 
 
+
+
+
+	when S_LW =>
+
+                cmd.AD_we <= '1';
+		cmd.AD_Y_sel  <= AD_Y_immI;
+		-- next state
+		state_d <= S_LW2;
+
+	when S_LW2 =>
+
+		cmd.ADDR_sel <= ADDR_from_ad;
+		cmd.mem_ce <= '1';
+		cmd.mem_we <= '1';
+		
+		-- next state
+		state_d <= S_LW3;
+	when S_LW3 =>
+		cmd.mem_ce <= '1';
+		cmd.mem_we <= '1';
+		cmd.RF_we <= '1';
+		cmd.RF_SIZE_sel <= RF_SIZE_word;
+		cmd.DATA_sel <= DATA_from_mem;
+		-- next state
+		state_d <= S_FETCH;
+		
+
+
+
+
+
+
 	when S_BEQ =>
 	
 		cmd.ALU_Y_sel <= ALU_Y_rf_rs2;
@@ -482,6 +587,7 @@ begin
 			state_d <= S_BRANCH;	
 	
 		end if;
+
 
 	when S_BNE =>
 	
@@ -541,6 +647,24 @@ begin
 		end if;
                 
 	when S_BGEU =>
+	
+		cmd.ALU_Y_sel <= ALU_Y_rf_rs2;
+		if status.JCOND then
+			
+			cmd.TO_PC_Y_sel <= TO_PC_Y_immB;
+			cmd.PC_sel <= PC_from_pc;
+			cmd.PC_we <= '1';
+			-- next state
+			state_d <= S_BRANCH;	
+		else 
+			cmd.TO_PC_Y_sel <= TO_PC_Y_cst_x04;
+			cmd.PC_sel <= PC_from_pc;
+			cmd.PC_we <= '1';
+			-- next state
+			state_d <= S_BRANCH;	
+	
+		end if;
+	when S_BGE =>
 	
 		cmd.ALU_Y_sel <= ALU_Y_rf_rs2;
 		if status.JCOND then
