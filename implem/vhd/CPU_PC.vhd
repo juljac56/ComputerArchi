@@ -42,11 +42,17 @@ architecture RTL of CPU_PC is
 	S_SRLI,
 	S_SLLI, 
 	S_BEQ, 
+	S_TOTO,
+	S_SLT,
+	S_BRANCH,
+	S_SLTU,
+	S_SLTI,
+	S_SLTIU,
 	S_BNE,
 	S_BLT,
 	S_BGE,
-	S_TOTO,
-	S_SLT
+	S_BLTU,
+	S_BGEU
     );
 
     signal state_d, state_q : State_type;
@@ -201,13 +207,36 @@ begin
 					state_d <= S_SLLI;
 			elsif status.IR(14 downto 12) = "101" then
 					state_d <= S_SRLI;
+			elsif status.IR(14 downto 12) = "010" then
+			           state_d <= S_SLTI;
+			elsif status.IR(14 downto 12) = "011" then
+			           state_d <= S_SLTIU;
 			end if;
 			
 		elsif status.IR(6 downto 0) = "0010111" then
 			state_d <= S_AUIPC;
 
 		elsif status.IR(6 downto 0) = "1100011" then
-			state_d <= S_TOTO;
+			if status.IR(14 downto 12) = "000" then
+					cmd.PC_we <= '0';
+					state_d <= S_BEQ;
+			elsif status.IR(14 downto 12) = "001" then
+					cmd.PC_we <= '0';
+					state_d <= S_BNE;
+			elsif status.IR(14 downto 12) = "100" then
+					cmd.PC_we <= '0';
+					state_d <= S_BLT;
+			elsif status.IR(14 downto 12) = "101" then
+					cmd.PC_we <= '0';
+					state_d <= S_BGE;
+			elsif status.IR(14 downto 12) = "110" then
+					cmd.PC_we <= '0';
+					state_d <= S_BLTU;
+			elsif status.IR(14 downto 12) = "111" then
+					cmd.PC_we <= '0';
+					state_d <= S_BGEU;
+
+			end if;
 
 		elsif status.IR(6 downto 0) = "0110011" then
 			if status.IR(31 downto 25) = "0100000" then 
@@ -227,6 +256,8 @@ begin
 					state_d <= S_SRL;
 				elsif status.IR(14 downto 12) = "010" then
 			           state_d <= S_SLT;
+				elsif status.IR(14 downto 12) = "011" then
+			           state_d <= S_SLTU;
 				end if;
 			end if;
 
@@ -400,6 +431,144 @@ begin
 		cmd.mem_we <= '0';
 		-- next state
 		state_d <= S_Fetch;
+
+	when S_SLTI =>
+		cmd.ALU_Y_sel <= ALU_Y_immI;
+		cmd.ADDR_sel <= ADDR_from_pc;
+		cmd.DATA_sel <= DATA_from_slt;
+                cmd.RF_we <= '1';
+		cmd.mem_ce <= '1';
+		cmd.mem_we <= '0';
+		-- next state
+		state_d <= S_Fetch;
+
+	when S_SLTU =>
+		cmd.ALU_Y_sel <= ALU_Y_rf_rs2;
+		cmd.ADDR_sel <= ADDR_from_pc;
+		cmd.DATA_sel <= DATA_from_slt;
+                cmd.RF_we <= '1';
+		cmd.mem_ce <= '1';
+		cmd.mem_we <= '0';
+		-- next state
+		state_d <= S_Fetch;
+
+	
+	when S_SLTIU =>
+		cmd.ALU_Y_sel <= ALU_Y_immI;
+		cmd.ADDR_sel <= ADDR_from_pc;
+		cmd.DATA_sel <= DATA_from_slt;
+                cmd.RF_we <= '1';
+		cmd.mem_ce <= '1';
+		cmd.mem_we <= '0';
+		-- next state
+		state_d <= S_Fetch;
+
+
+	when S_BEQ =>
+	
+		cmd.ALU_Y_sel <= ALU_Y_rf_rs2;
+		if status.JCOND then
+			
+			cmd.TO_PC_Y_sel <= TO_PC_Y_immB;
+			cmd.PC_sel <= PC_from_pc;
+			cmd.PC_we <= '1';
+			-- next state
+			state_d <= S_BRANCH;	
+		else 
+			cmd.TO_PC_Y_sel <= TO_PC_Y_cst_x04;
+			cmd.PC_sel <= PC_from_pc;
+			cmd.PC_we <= '1';
+			-- next state
+			state_d <= S_BRANCH;	
+	
+		end if;
+
+	when S_BNE =>
+	
+		cmd.ALU_Y_sel <= ALU_Y_rf_rs2;
+		if status.JCOND then
+			
+			cmd.TO_PC_Y_sel <= TO_PC_Y_immB;
+			cmd.PC_sel <= PC_from_pc;
+			cmd.PC_we <= '1';
+			-- next state
+			state_d <= S_BRANCH;	
+		else 
+			cmd.TO_PC_Y_sel <= TO_PC_Y_cst_x04;
+			cmd.PC_sel <= PC_from_pc;
+			cmd.PC_we <= '1';
+			-- next state
+			state_d <= S_BRANCH;	
+	
+		end if;
+
+	when S_BLT =>
+	
+		cmd.ALU_Y_sel <= ALU_Y_rf_rs2;
+		if status.JCOND then
+			
+			cmd.TO_PC_Y_sel <= TO_PC_Y_immB;
+			cmd.PC_sel <= PC_from_pc;
+			cmd.PC_we <= '1';
+			-- next state
+			state_d <= S_BRANCH;	
+		else 
+			cmd.TO_PC_Y_sel <= TO_PC_Y_cst_x04;
+			cmd.PC_sel <= PC_from_pc;
+			cmd.PC_we <= '1';
+			-- next state
+			state_d <= S_BRANCH;	
+	
+		end if;
+
+	when S_BLTU =>
+	
+		cmd.ALU_Y_sel <= ALU_Y_rf_rs2;
+		if status.JCOND then
+			
+			cmd.TO_PC_Y_sel <= TO_PC_Y_immB;
+			cmd.PC_sel <= PC_from_pc;
+			cmd.PC_we <= '1';
+			-- next state
+			state_d <= S_BRANCH;	
+		else 
+			cmd.TO_PC_Y_sel <= TO_PC_Y_cst_x04;
+			cmd.PC_sel <= PC_from_pc;
+			cmd.PC_we <= '1';
+			-- next state
+			state_d <= S_BRANCH;	
+	
+		end if;
+                
+	when S_BGEU =>
+	
+		cmd.ALU_Y_sel <= ALU_Y_rf_rs2;
+		if status.JCOND then
+			
+			cmd.TO_PC_Y_sel <= TO_PC_Y_immB;
+			cmd.PC_sel <= PC_from_pc;
+			cmd.PC_we <= '1';
+			-- next state
+			state_d <= S_BRANCH;	
+		else 
+			cmd.TO_PC_Y_sel <= TO_PC_Y_cst_x04;
+			cmd.PC_sel <= PC_from_pc;
+			cmd.PC_we <= '1';
+			-- next state
+			state_d <= S_BRANCH;	
+	
+		end if;
+		
+		
+
+	when S_BRANCH =>
+		cmd.ADDR_sel <= ADDR_from_pc;
+		cmd.RF_we <= '1';
+		cmd.mem_ce <= '1';
+		cmd.mem_we <= '0';
+		-- next state
+		state_d <= S_FETCH;
+
 
 
 				

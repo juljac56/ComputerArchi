@@ -25,6 +25,7 @@ architecture RTL of CPU_CND is
 	signal z : std_logic;
 	signal s_a : std_logic_vector(31 downto 0);
 	signal s_b : std_logic_vector(31 downto 0);
+	signal x : std_logic;
 
 
 begin
@@ -36,7 +37,11 @@ begin
 
 	s <= '1' WHEN signed(s_b) > signed(s_a) AND ex_signe ='1'
 			 ELSE '1' WHEN inb > ina AND ex_signe ='0' ELSE '0';
-	j <= '0';
+	
+	z <= '1' WHEN ina = inb ELSE '0';
+
+	
+	j <= ((z xor e) and (not f)) or ((e xor s) and f);
 	
 	
 	

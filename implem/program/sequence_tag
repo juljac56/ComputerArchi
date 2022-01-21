@@ -27,9 +27,9 @@ SRLI
 
 #SETS
 SLT
-#SLTI
-#SLTU
-#SLTIU
+SLTI
+SLTU
+SLTIU
 
 #LOADS
 #LW
@@ -48,12 +48,12 @@ SLT
 #JALR
 
 #BRANCHEMENTS
-#BEQ
-#BGE
-#BGEU
-#BLT
-#BLTU
-#BNE
+BEQ
+BGE
+BGEU
+BLT
+BLTU
+BNE
 
 #Tests bidon pour illustrer une mauvaise couverture de test
 #BIDON
