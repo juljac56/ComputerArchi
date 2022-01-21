@@ -54,4 +54,5 @@ Space Invader sur carte :
 `cd implem && make help`
 
 source /Xilinx/env-14.7.sh
+deuxixeme ordi (mateo) : source /tools/Xilinx/Vivado/2019.1/settings64.sh
 

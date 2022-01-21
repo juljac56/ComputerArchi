@@ -32,7 +32,20 @@ architecture RTL of CPU_PC is
 	S_ADDI,
 	S_ADD, 
 	S_SUB,
-	S_SLL
+	S_SLL,
+	S_AUIPC,
+	S_AND,
+	S_ANDI,
+	S_OR,
+	S_XOR,
+	S_SRL,
+	S_SRLI,
+	S_SLLI, 
+	S_BEQ, 
+	S_BNE,
+	S_BLT,
+	S_BGE,
+	S_TOTO
     );
 
     signal state_d, state_q : State_type;
@@ -178,6 +191,21 @@ begin
 			state_d <= S_LUI;
 		elsif status.IR(6 downto 0) = "0010011" then
 			state_d <= S_ADDI;
+			if status.IR(14 downto 12) = "111" then
+					state_d <= S_ANDI;
+			elsif status.IR(14 downto 12) = "000" then
+					state_d <= S_ADDI;
+			elsif status.IR(14 downto 12) = "001" then
+					state_d <= S_SLLI;
+			elsif status.IR(14 downto 12) = "101" then
+					state_d <= S_SRLI;
+			end if;
+			
+		elsif status.IR(6 downto 0) = "0010111" then
+			state_d <= S_AUIPC;
+		elsif status.IR(6 downto 0) = "1100011" then
+			state_d <= S_TOTO;
+
 		elsif status.IR(6 downto 0) = "0110011" then
 			if status.IR(31 downto 25) = "0100000" then 
 				state_d <= S_SUB;
@@ -186,6 +214,14 @@ begin
 					state_d <= S_SLL;
 				elsif status.IR(14 downto 12) = "000" then
 					state_d <= S_ADD;
+				elsif status.IR(14 downto 12) = "111" then
+					state_d <= S_AND;
+				elsif status.IR(14 downto 12) = "110" then
+					state_d <= S_OR;
+				elsif status.IR(14 downto 12) = "100" then
+					state_d <= S_XOR;
+				elsif status.IR(14 downto 12) = "101" then
+					state_d <= S_SRL;
 				end if;
 			end if;
 
@@ -229,6 +265,51 @@ begin
 		-- next state
 		state_d <= S_Fetch;
 
+	   when S_AND =>
+		cmd.ALU_Y_sel <= ALU_Y_rf_rs2;
+		cmd.LOGICAL_OP <= LOGICAL_and;
+		cmd.DATA_sel <= DATA_from_logical;
+		cmd.RF_we <= '1';
+		cmd.ADDR_sel <= ADDR_from_pc;
+		cmd.mem_ce <= '1';
+		cmd.mem_we <= '0';
+		-- next state
+		state_d <= S_Fetch;
+
+	when S_ANDI =>
+		cmd.ALU_Y_sel <= ALU_Y_immI;
+		cmd.LOGICAL_OP <= LOGICAL_and;
+		cmd.DATA_sel <= DATA_from_logical;
+		cmd.RF_we <= '1';
+		cmd.ADDR_sel <= ADDR_from_pc;
+		cmd.mem_ce <= '1';
+		cmd.mem_we <= '0';
+		-- next state
+		state_d <= S_Fetch;
+
+	when S_OR =>
+		cmd.ALU_Y_sel <= ALU_Y_rf_rs2;
+		cmd.LOGICAL_OP <= LOGICAL_or;
+		cmd.DATA_sel <= DATA_from_logical;
+		cmd.RF_we <= '1';
+		cmd.ADDR_sel <= ADDR_from_pc;
+		cmd.mem_ce <= '1';
+		cmd.mem_we <= '0';
+		-- next state
+		state_d <= S_Fetch;
+
+	
+	when S_XOR =>
+		cmd.ALU_Y_sel <= ALU_Y_rf_rs2;
+		cmd.LOGICAL_OP <= LOGICAL_xor;
+		cmd.DATA_sel <= DATA_from_logical;
+		cmd.RF_we <= '1';
+		cmd.ADDR_sel <= ADDR_from_pc;
+		cmd.mem_ce <= '1';
+		cmd.mem_we <= '0';
+		-- next state
+		state_d <= S_Fetch;
+
            when S_SUB =>
 		cmd.ALU_Y_sel <= ALU_Y_rf_rs2;
 		cmd.ALU_op <= ALU_minus;
@@ -252,6 +333,55 @@ begin
 		-- next state
 		state_d <= S_Fetch;
 
+	  when S_SLLI => 
+		cmd.SHIFTER_Y_SEL <= SHIFTER_Y_ir_sh;
+		cmd.SHIFTER_op <= SHIFT_ll;
+		cmd.DATA_sel <= DATA_from_shifter;
+		cmd.RF_we <= '1';
+		cmd.ADDR_sel <= ADDR_from_pc;
+		cmd.mem_ce <= '1';
+		cmd.mem_we <= '0';
+		-- next state
+		state_d <= S_Fetch;
+
+	 when S_SRL => 
+		cmd.SHIFTER_Y_SEL <= SHIFTER_Y_rs2;
+		cmd.SHIFTER_op <= SHIFT_rl;
+		cmd.DATA_sel <= DATA_from_shifter;
+		cmd.RF_we <= '1';
+		cmd.ADDR_sel <= ADDR_from_pc;
+		cmd.mem_ce <= '1';
+		cmd.mem_we <= '0';
+		-- next state
+		state_d <= S_Fetch;
+
+	 when S_SRLI => 
+		cmd.SHIFTER_Y_SEL <= SHIFTER_Y_ir_sh;
+		cmd.SHIFTER_op <= SHIFT_rl;
+		cmd.DATA_sel <= DATA_from_shifter;
+		cmd.RF_we <= '1';
+		cmd.ADDR_sel <= ADDR_from_pc;
+		cmd.mem_ce <= '1';
+		cmd.mem_we <= '0';
+		-- next state
+		state_d <= S_Fetch;
+		
+	  when S_AUIPC => 
+	-- rd <- ImmU + 0
+		cmd.PC_X_sel <= PC_X_pc;
+		cmd.PC_Y_sel <= PC_Y_immU;
+		cmd.RF_we <= '1';
+		cmd.DATA_sel <= DATA_from_pc;
+		-- lecture mem[PC]
+		cmd.ADDR_sel <= ADDR_from_pc;
+		cmd.mem_ce <= '1';
+		cmd.mem_we <= '0';
+		-- next state
+		state_d <= S_Fetch;
+
+	when S_TOTO =>
+		state_d <= S_Fetch;
+		
 				
 				
 		
