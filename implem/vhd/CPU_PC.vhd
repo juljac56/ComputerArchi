@@ -59,7 +59,10 @@ architecture RTL of CPU_PC is
 	S_SRAI,
 	S_LW,
 	S_LW2,
-	S_LW3
+	S_LW3,
+	S_SW,
+	S_SW2,
+	S_SW3
     );
 
     signal state_d, state_q : State_type;
@@ -285,8 +288,14 @@ begin
 			end if;
 
 		elsif status.IR(6 downto 0) = "0000011" then
-			elsif status.IR(14 downto 12) = "010" then
+			if status.IR(14 downto 12) = "010" then
 					state_d <= S_LW;
+			end if;
+
+		elsif status.IR(6 downto 0) = "0100011" then
+			if status.IR(14 downto 12) = "010" then
+					state_d <= S_SW;
+			end if;
 			
 
 		else
@@ -555,6 +564,30 @@ begin
 		-- next state
 		state_d <= S_LW3;
 	when S_LW3 =>
+		cmd.mem_ce <= '1';
+		cmd.mem_we <= '1';
+		cmd.RF_we <= '1';
+		cmd.RF_SIZE_sel <= RF_SIZE_word;
+		cmd.DATA_sel <= DATA_from_mem;
+		-- next state
+		state_d <= S_FETCH;
+		
+	when S_SW =>
+
+                cmd.AD_we <= '1';
+		cmd.AD_Y_sel  <= AD_Y_immI;
+		-- next state
+		state_d <= S_SW2;
+
+	when S_SW2 =>
+
+		cmd.ADDR_sel <= ADDR_from_ad;
+		cmd.mem_ce <= '1';
+		cmd.mem_we <= '1';
+		
+		-- next state
+		state_d <= S_SW3;
+	when S_SW3 =>
 		cmd.mem_ce <= '1';
 		cmd.mem_we <= '1';
 		cmd.RF_we <= '1';
